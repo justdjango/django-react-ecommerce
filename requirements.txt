@@ -6,6 +6,7 @@ defusedxml==0.6.0
 Django==2.2.3
 django-allauth==0.39.1
 django-cors-headers==3.0.2
+django-countries==5.3.3
 django-rest-auth==0.9.5
 djangorestframework==3.9.4
 gunicorn==19.9.0
