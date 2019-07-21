@@ -16,6 +16,7 @@ lazy-object-proxy==1.4.1
 mccabe==0.6.1
 oauthlib==3.0.1
 pep8==1.7.1
+Pillow==6.1.0
 pycodestyle==2.5.0
 pylint==2.3.1
 python3-openid==3.1.0
