@@ -311,7 +311,6 @@ class PaymentView(View):
 
             except stripe.error.InvalidRequestError as e:
                 # Invalid parameters were supplied to Stripe's API
-                print(e)
                 messages.warning(self.request, "Invalid parameters")
                 return redirect("/")
 
