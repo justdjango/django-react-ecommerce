@@ -71,6 +71,7 @@ class ProductList extends React.Component {
         )}
         <Item.Group divided>
           {data.map(item => {
+            console.log(item);
             return (
               <Item key={item.id}>
                 <Item.Image src={item.image} />

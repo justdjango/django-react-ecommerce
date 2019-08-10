@@ -34,7 +34,14 @@ class OrderSummary extends React.Component {
         this.setState({ data: res.data, loading: false });
       })
       .catch(err => {
-        this.setState({ error: err, loading: false });
+        if (err.response.status === 404) {
+          this.setState({
+            error: "You currently do not have an order",
+            loading: false
+          });
+        } else {
+          this.setState({ error: err, loading: false });
+        }
       });
   };
 
