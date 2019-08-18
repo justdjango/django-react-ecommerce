@@ -63,6 +63,33 @@ class Item(models.Model):
         })
 
 
+class Variation(models.Model):
+    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    name = models.CharField(max_length=50)  # size
+
+    class Meta:
+        unique_together = (
+            ('item', 'name')
+        )
+
+    def __str__(self):
+        return self.name
+
+
+class ItemVariation(models.Model):
+    variation = models.ForeignKey(Variation, on_delete=models.CASCADE)
+    value = models.CharField(max_length=50)  # S, M, L
+    attachment = models.ImageField(blank=True)
+
+    class Meta:
+        unique_together = (
+            ('variation', 'value')
+        )
+
+    def __str__(self):
+        return self.value
+
+
 class OrderItem(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE)
