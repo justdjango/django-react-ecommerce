@@ -2,10 +2,8 @@ import React from "react";
 import { connect } from "react-redux";
 import axios from "axios";
 import {
-  Button,
   Container,
   Dimmer,
-  Icon,
   Image,
   Item,
   Label,
@@ -71,7 +69,6 @@ class ProductList extends React.Component {
         )}
         <Item.Group divided>
           {data.map(item => {
-            console.log(item);
             return (
               <Item key={item.id}>
                 <Item.Image src={item.image} />
@@ -89,7 +86,7 @@ class ProductList extends React.Component {
                   </Item.Meta>
                   <Item.Description>{item.description}</Item.Description>
                   <Item.Extra>
-                    <Button
+                    {/* <Button
                       primary
                       floated="right"
                       icon
@@ -98,7 +95,7 @@ class ProductList extends React.Component {
                     >
                       Add to cart
                       <Icon name="cart plus" />
-                    </Button>
+                    </Button> */}
                     {item.discount_price && (
                       <Label
                         color={

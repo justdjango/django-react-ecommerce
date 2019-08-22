@@ -4,7 +4,7 @@
 
 This repository contains a Django and React ecommerce project. Among other functionality, users can create their account, add items to their cart and purchase those items using Stripe.
 
-[Watch the tutorials on how to building this project](https://youtu.be/RG_Y7lIDXPM)
+[Watch the tutorials on how to build this project](https://youtu.be/RG_Y7lIDXPM)
 
 ## Backend development workflow
 

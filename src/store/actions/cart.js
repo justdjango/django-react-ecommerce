@@ -1,4 +1,3 @@
-import axios from "axios";
 import { CART_START, CART_SUCCESS, CART_FAIL } from "./actionTypes";
 import { authAxios } from "../../utils";
 import { orderSummaryURL } from "../../constants";

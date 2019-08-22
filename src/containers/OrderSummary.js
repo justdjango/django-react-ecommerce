@@ -45,9 +45,16 @@ class OrderSummary extends React.Component {
       });
   };
 
+  renderVariations = orderItem => {
+    let text = "";
+    orderItem.item_variations.forEach(iv => {
+      text += `${iv.variation.name}: ${iv.value}, `;
+    });
+    return text;
+  };
+
   render() {
     const { data, error, loading } = this.state;
-    console.log(data);
     return (
       <Container>
         <Header>Order Summary</Header>
@@ -84,11 +91,14 @@ class OrderSummary extends React.Component {
                 return (
                   <Table.Row key={orderItem.id}>
                     <Table.Cell>{i + 1}</Table.Cell>
-                    <Table.Cell>{orderItem.item_obj.title}</Table.Cell>
-                    <Table.Cell>${orderItem.item_obj.price}</Table.Cell>
+                    <Table.Cell>
+                      {orderItem.item.title} -{" "}
+                      {this.renderVariations(orderItem)}
+                    </Table.Cell>
+                    <Table.Cell>${orderItem.item.price}</Table.Cell>
                     <Table.Cell>{orderItem.quantity}</Table.Cell>
                     <Table.Cell>
-                      {orderItem.item_obj.discount_price && (
+                      {orderItem.item.discount_price && (
                         <Label color="green" ribbon>
                           ON DISCOUNT
                         </Label>
