@@ -1,5 +1,6 @@
+from django_countries.serializer_fields import CountryField
 from rest_framework import serializers
-from core.models import Item, Order, OrderItem, Coupon, Variation, ItemVariation
+from core.models import Address, Item, Order, OrderItem, Coupon, Variation, ItemVariation
 
 
 class StringSerializer(serializers.StringRelatedField):
@@ -177,3 +178,20 @@ class ItemDetailSerializer(serializers.ModelSerializer):
 
     def get_variations(self, obj):
         return VariationSerializer(obj.variation_set.all(), many=True).data
+
+
+class AddressSerializer(serializers.ModelSerializer):
+    country = CountryField()
+
+    class Meta:
+        model = Address
+        fields = (
+            'id',
+            'user',
+            'street_address',
+            'apartment_address',
+            'country',
+            'zip',
+            'address_type',
+            'default'
+        )

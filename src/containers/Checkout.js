@@ -17,10 +17,17 @@ import {
   Label,
   Loader,
   Message,
-  Segment
+  Segment,
+  Select
 } from "semantic-ui-react";
+import { Link, withRouter } from "react-router-dom";
 import { authAxios } from "../utils";
-import { checkoutURL, orderSummaryURL, addCouponURL } from "../constants";
+import {
+  checkoutURL,
+  orderSummaryURL,
+  addCouponURL,
+  addressListURL
+} from "../constants";
 
 const OrderPreview = props => {
   const { data } = props;
@@ -30,16 +37,15 @@ const OrderPreview = props => {
         <React.Fragment>
           <Item.Group relaxed>
             {data.order_items.map((orderItem, i) => {
-              console.log(orderItem);
               return (
                 <Item key={i}>
                   <Item.Image
                     size="tiny"
-                    src={`http://127.0.0.1:8000${orderItem.item_obj.image}`}
+                    src={`http://127.0.0.1:8000${orderItem.item.image}`}
                   />
                   <Item.Content verticalAlign="middle">
                     <Item.Header as="a">
-                      {orderItem.quantity} x {orderItem.item_obj.title}
+                      {orderItem.quantity} x {orderItem.item.title}
                     </Item.Header>
                     <Item.Extra>
                       <Label>${orderItem.final_price}</Label>
@@ -113,12 +119,70 @@ class CheckoutForm extends Component {
     data: null,
     loading: false,
     error: null,
-    success: false
+    success: false,
+    shippingAddresses: [],
+    billingAddresses: [],
+    selectedBillingAddress: "",
+    selectedShippingAddress: ""
   };
 
   componentDidMount() {
     this.handleFetchOrder();
+    this.handleFetchBillingAddresses();
+    this.handleFetchShippingAddresses();
   }
+
+  handleGetDefaultAddress = addresses => {
+    const filteredAddresses = addresses.filter(el => el.default === true);
+    if (filteredAddresses.length > 0) {
+      return filteredAddresses[0].id;
+    }
+    return "";
+  };
+
+  handleFetchBillingAddresses = () => {
+    this.setState({ loading: true });
+    authAxios
+      .get(addressListURL("B"))
+      .then(res => {
+        this.setState({
+          billingAddresses: res.data.map(a => {
+            return {
+              key: a.id,
+              text: `${a.street_address}, ${a.apartment_address}, ${a.country}`,
+              value: a.id
+            };
+          }),
+          selectedBillingAddress: this.handleGetDefaultAddress(res.data),
+          loading: false
+        });
+      })
+      .catch(err => {
+        this.setState({ error: err, loading: false });
+      });
+  };
+
+  handleFetchShippingAddresses = () => {
+    this.setState({ loading: true });
+    authAxios
+      .get(addressListURL("S"))
+      .then(res => {
+        this.setState({
+          shippingAddresses: res.data.map(a => {
+            return {
+              key: a.id,
+              text: `${a.street_address}, ${a.apartment_address}, ${a.country}`,
+              value: a.id
+            };
+          }),
+          selectedShippingAddress: this.handleGetDefaultAddress(res.data),
+          loading: false
+        });
+      })
+      .catch(err => {
+        this.setState({ error: err, loading: false });
+      });
+  };
 
   handleFetchOrder = () => {
     this.setState({ loading: true });
@@ -129,10 +193,7 @@ class CheckoutForm extends Component {
       })
       .catch(err => {
         if (err.response.status === 404) {
-          this.setState({
-            error: "You currently do not have an order",
-            loading: false
-          });
+          this.props.history.push("/products");
         } else {
           this.setState({ error: err, loading: false });
         }
@@ -153,6 +214,10 @@ class CheckoutForm extends Component {
       });
   };
 
+  handleSelectChange = (e, { name, value }) => {
+    this.setState({ [name]: value });
+  };
+
   submit = ev => {
     ev.preventDefault();
     this.setState({ loading: true });
@@ -161,11 +226,19 @@ class CheckoutForm extends Component {
         if (result.error) {
           this.setState({ error: result.error.message, loading: false });
         } else {
+          this.setState({ error: null });
+          const {
+            selectedBillingAddress,
+            selectedShippingAddress
+          } = this.state;
           authAxios
-            .post(checkoutURL, { stripeToken: result.token.id })
+            .post(checkoutURL, {
+              stripeToken: result.token.id,
+              selectedBillingAddress,
+              selectedShippingAddress
+            })
             .then(res => {
               this.setState({ loading: false, success: true });
-              // redirect the user
             })
             .catch(err => {
               this.setState({ loading: false, error: err });
@@ -178,7 +251,17 @@ class CheckoutForm extends Component {
   };
 
   render() {
-    const { data, error, loading, success } = this.state;
+    const {
+      data,
+      error,
+      loading,
+      success,
+      billingAddresses,
+      shippingAddresses,
+      selectedBillingAddress,
+      selectedShippingAddress
+    } = this.state;
+
     return (
       <div>
         {error && (
@@ -196,14 +279,6 @@ class CheckoutForm extends Component {
             <Image src="/images/wireframe/short-paragraph.png" />
           </Segment>
         )}
-        {success && (
-          <Message positive>
-            <Message.Header>Your payment was successful</Message.Header>
-            <p>
-              Go to your <b>profile</b> to see the order delivery status.
-            </p>
-          </Message>
-        )}
 
         <OrderPreview data={data} />
         <Divider />
@@ -211,24 +286,69 @@ class CheckoutForm extends Component {
           handleAddCoupon={(e, code) => this.handleAddCoupon(e, code)}
         />
         <Divider />
+        <Header>Select a billing address</Header>
+        {billingAddresses.length > 0 ? (
+          <Select
+            name="selectedBillingAddress"
+            value={selectedBillingAddress}
+            clearable
+            options={billingAddresses}
+            selection
+            onChange={this.handleSelectChange}
+          />
+        ) : (
+          <p>
+            You need to <Link to="/profile">add a billing address</Link>
+          </p>
+        )}
+        <Header>Select a shipping address</Header>
+        {shippingAddresses.length > 0 ? (
+          <Select
+            name="selectedShippingAddress"
+            value={selectedShippingAddress}
+            clearable
+            options={shippingAddresses}
+            selection
+            onChange={this.handleSelectChange}
+          />
+        ) : (
+          <p>
+            You need to <Link to="/profile">add a shipping address</Link>
+          </p>
+        )}
+        <Divider />
 
-        <Header>Would you like to complete the purchase?</Header>
-        <CardElement />
-        <Button
-          loading={loading}
-          disabled={loading}
-          primary
-          onClick={this.submit}
-          style={{ marginTop: "10px" }}
-        >
-          Submit
-        </Button>
+        {billingAddresses.length < 1 || shippingAddresses.length < 1 ? (
+          <p>You need to add addresses before you can complete your purchase</p>
+        ) : (
+          <React.Fragment>
+            <Header>Would you like to complete the purchase?</Header>
+            <CardElement />
+            {success && (
+              <Message positive>
+                <Message.Header>Your payment was successful</Message.Header>
+                <p>
+                  Go to your <b>profile</b> to see the order delivery status.
+                </p>
+              </Message>
+            )}
+            <Button
+              loading={loading}
+              disabled={loading}
+              primary
+              onClick={this.submit}
+              style={{ marginTop: "10px" }}
+            >
+              Submit
+            </Button>
+          </React.Fragment>
+        )}
       </div>
     );
   }
 }
 
-const InjectedForm = injectStripe(CheckoutForm);
+const InjectedForm = withRouter(injectStripe(CheckoutForm));
 
 const WrappedForm = () => (
   <Container text>

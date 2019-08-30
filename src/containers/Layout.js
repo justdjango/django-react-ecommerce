@@ -22,6 +22,7 @@ class CustomLayout extends React.Component {
 
   render() {
     const { authenticated, cart, loading } = this.props;
+    console.log(cart);
     return (
       <div>
         <Menu inverted>
@@ -35,6 +36,9 @@ class CustomLayout extends React.Component {
             {authenticated ? (
               <React.Fragment>
                 <Menu.Menu position="right">
+                  <Link to="/profile">
+                    <Menu.Item>Profile</Menu.Item>
+                  </Link>
                   <Dropdown
                     icon="cart"
                     loading={loading}
@@ -43,26 +47,31 @@ class CustomLayout extends React.Component {
                     className="link item"
                   >
                     <Dropdown.Menu>
-                      {cart &&
-                        cart.order_items.map(order_item => {
-                          return (
-                            <Dropdown.Item key={order_item.id}>
-                              {order_item.quantity} x {order_item.item.title}
-                            </Dropdown.Item>
-                          );
-                        })}
-                      {cart && cart.order_items.length < 1 ? (
-                        <Dropdown.Item>No items in your cart</Dropdown.Item>
-                      ) : null}
-                      <Dropdown.Divider />
+                      {cart !== null ? (
+                        <React.Fragment>
+                          {cart.order_items.map(order_item => {
+                            return (
+                              <Dropdown.Item key={order_item.id}>
+                                {order_item.quantity} x {order_item.item.title}
+                              </Dropdown.Item>
+                            );
+                          })}
+                          {cart.order_items.length < 1 ? (
+                            <Dropdown.Item>No items in your cart</Dropdown.Item>
+                          ) : null}
+                          <Dropdown.Divider />
 
-                      <Dropdown.Item
-                        icon="arrow right"
-                        text="Checkout"
-                        onClick={() =>
-                          this.props.history.push("/order-summary")
-                        }
-                      />
+                          <Dropdown.Item
+                            icon="arrow right"
+                            text="Checkout"
+                            onClick={() =>
+                              this.props.history.push("/order-summary")
+                            }
+                          />
+                        </React.Fragment>
+                      ) : (
+                        <Dropdown.Item>No items in your cart</Dropdown.Item>
+                      )}
                     </Dropdown.Menu>
                   </Dropdown>
                   <Menu.Item header onClick={() => this.props.logout()}>
