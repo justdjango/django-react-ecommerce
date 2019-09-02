@@ -40,6 +40,42 @@ class ItemDetailView(RetrieveAPIView):
     queryset = Item.objects.all()
 
 
+class OrderQuantityUpdateView(APIView):
+    def post(self, request, *args, **kwargs):
+        slug = request.data.get('slug', None)
+        if slug is None:
+            return Response({"message": "Invalid data"}, status=HTTP_400_BAD_REQUEST)
+        item = get_object_or_404(Item, slug=slug)
+        order_qs = Order.objects.filter(
+            user=request.user,
+            ordered=False
+        )
+        if order_qs.exists():
+            order = order_qs[0]
+            # check if the order item is in the order
+            if order.items.filter(item__slug=item.slug).exists():
+                order_item = OrderItem.objects.filter(
+                    item=item,
+                    user=request.user,
+                    ordered=False
+                )[0]
+                if order_item.quantity > 1:
+                    order_item.quantity -= 1
+                    order_item.save()
+                else:
+                    order.items.remove(order_item)
+                return Response(status=HTTP_200_OK)
+            else:
+                return Response({"message": "This item was not in your cart"}, status=HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"message": "You do not have an active order"}, status=HTTP_400_BAD_REQUEST)
+
+
+class OrderItemDeleteView(DestroyAPIView):
+    permission_classes = (IsAuthenticated, )
+    queryset = OrderItem.objects.all()
+
+
 class AddToCartView(APIView):
     def post(self, request, *args, **kwargs):
         slug = request.data.get('slug', None)

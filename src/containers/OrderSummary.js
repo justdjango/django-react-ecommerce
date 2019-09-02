@@ -3,6 +3,7 @@ import {
   Container,
   Dimmer,
   Header,
+  Icon,
   Image,
   Label,
   Loader,
@@ -11,9 +12,15 @@ import {
   Message,
   Segment
 } from "semantic-ui-react";
-import { Link } from "react-router-dom";
+import { connect } from "react-redux";
+import { Link, Redirect } from "react-router-dom";
 import { authAxios } from "../utils";
-import { orderSummaryURL } from "../constants";
+import {
+  addToCartURL,
+  orderSummaryURL,
+  orderItemDeleteURL,
+  orderItemUpdateQuantityURL
+} from "../constants";
 
 class OrderSummary extends React.Component {
   state = {
@@ -53,8 +60,57 @@ class OrderSummary extends React.Component {
     return text;
   };
 
+  handleFormatData = itemVariations => {
+    // convert [{id: 1},{id: 2}] to [1,2] - they're all variations
+    return Object.keys(itemVariations).map(key => {
+      return itemVariations[key].id;
+    });
+  };
+
+  handleAddToCart = (slug, itemVariations) => {
+    this.setState({ loading: true });
+    const variations = this.handleFormatData(itemVariations);
+    authAxios
+      .post(addToCartURL, { slug, variations })
+      .then(res => {
+        this.handleFetchOrder();
+        this.setState({ loading: false });
+      })
+      .catch(err => {
+        this.setState({ error: err, loading: false });
+      });
+  };
+
+  handleRemoveQuantityFromCart = slug => {
+    authAxios
+      .post(orderItemUpdateQuantityURL, { slug })
+      .then(res => {
+        this.handleFetchOrder();
+      })
+      .catch(err => {
+        this.setState({ error: err });
+      });
+  };
+
+  handleRemoveItem = itemID => {
+    authAxios
+      .delete(orderItemDeleteURL(itemID))
+      .then(res => {
+        this.handleFetchOrder();
+      })
+      .catch(err => {
+        this.setState({ error: err });
+      });
+  };
+
   render() {
     const { data, error, loading } = this.state;
+    const { isAuthenticated } = this.props;
+    if (!isAuthenticated) {
+      return <Redirect to="/login" />;
+    }
+    console.log(data);
+
     return (
       <Container>
         <Header>Order Summary</Header>
@@ -96,7 +152,26 @@ class OrderSummary extends React.Component {
                       {this.renderVariations(orderItem)}
                     </Table.Cell>
                     <Table.Cell>${orderItem.item.price}</Table.Cell>
-                    <Table.Cell>{orderItem.quantity}</Table.Cell>
+                    <Table.Cell textAlign="center">
+                      <Icon
+                        name="minus"
+                        style={{ float: "left", cursor: "pointer" }}
+                        onClick={() =>
+                          this.handleRemoveQuantityFromCart(orderItem.item.slug)
+                        }
+                      />
+                      {orderItem.quantity}
+                      <Icon
+                        name="plus"
+                        style={{ float: "right", cursor: "pointer" }}
+                        onClick={() =>
+                          this.handleAddToCart(
+                            orderItem.item.slug,
+                            orderItem.item_variations
+                          )
+                        }
+                      />
+                    </Table.Cell>
                     <Table.Cell>
                       {orderItem.item.discount_price && (
                         <Label color="green" ribbon>
@@ -104,6 +179,12 @@ class OrderSummary extends React.Component {
                         </Label>
                       )}
                       ${orderItem.final_price}
+                      <Icon
+                        name="trash"
+                        color="red"
+                        style={{ float: "right", cursor: "pointer" }}
+                        onClick={() => this.handleRemoveItem(orderItem.id)}
+                      />
                     </Table.Cell>
                   </Table.Row>
                 );
@@ -136,4 +217,10 @@ class OrderSummary extends React.Component {
   }
 }
 
-export default OrderSummary;
+const mapStateToProps = state => {
+  return {
+    isAuthenticated: state.auth.token !== null
+  };
+};
+
+export default connect(mapStateToProps)(OrderSummary);

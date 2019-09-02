@@ -22,7 +22,6 @@ class CustomLayout extends React.Component {
 
   render() {
     const { authenticated, cart, loading } = this.props;
-    console.log(cart);
     return (
       <div>
         <Menu inverted>
