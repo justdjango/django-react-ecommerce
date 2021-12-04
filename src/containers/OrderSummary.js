@@ -54,9 +54,10 @@ class OrderSummary extends React.Component {
 
   renderVariations = orderItem => {
     let text = "";
-    orderItem.item_variations.forEach(iv => {
+    for (var i=0; i < orderItem.item_variations.length; i++) {
+      var iv = orderItem.item_variations[i];
       text += `${iv.variation.name}: ${iv.value}, `;
-    });
+    }
     return text;
   };
 
